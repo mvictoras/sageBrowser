@@ -137,25 +137,39 @@ void Application::update() {
 
 void Application::handleSageMessages() {
     sageMessage msg;
-    int clickDeviceId, clickButtonId, clickIsDown, clickEvent, x, y;
+    int clickDeviceId, clickButtonId, clickIsDown, clickEvent, x, y, keyCode;
     float clickX, clickY, dX, dY;
+    Awesomium::WebKeyboardEvent keyEvent;
     
     if (sageInf->checkMsg(msg, false) > 0) {
-        printf("%d\n", msg.getCode());
+        //printf("%d\n", msg.getCode());
         char *data = (char *) msg.getData();
+        //printf("%s\n", data);
         switch( msg.getCode() ) {
             case APP_QUIT:
+            case EVT_KEY:
+                sscanf(data, "%d %f %f %d", &clickDeviceId, &clickX, &clickY, &keyCode);
+                keyEvent.type = Awesomium::WebKeyboardEvent::kTypeChar;
+
+                keyEvent.text[0] = keyCode;
+                keyEvent.text[1] = '\0';
+
+                webTiles[activeWebTile]->webView->InjectKeyboardEvent(keyEvent);
+
+                printf("Sending: %c\n", keyCode);
+
+                break;
             case NOTIFY_APP_SHUTDOWN:
-                printf("Quitting app!!!\n");
+                //printf("Quitting app!!!\n");
                 sageInf->shutdown();
                 shouldQuit = true;
                 break;
 
             case EVT_CLICK:
-                printf("This is it:%s\n", data);
-                printf("Clicked!\n");
+                //printf("This is it:%s\n", data);
+                //printf("Clicked!\n");
                 sscanf(data, "%d %f %f %d %d %d", &clickDeviceId, &clickX, &clickY, &clickButtonId, &clickIsDown, &clickEvent);
-                printf("EVT_CLICK %d x:%f y:%f\n", clickButtonId, clickX, clickY);
+                //printf("EVT_CLICK %d x:%f y:%f\n", clickButtonId, clickX, clickY);
                 x = (int) (clickX * WIDTH);
                 y = (int) HEIGHT - (clickY * HEIGHT);
 
@@ -167,8 +181,8 @@ void Application::handleSageMessages() {
 
                 break;
             case EVT_MOVE:
-                printf("Moved!\n");
-sscanf(data, "%d %f %f %f %f", &clickDeviceId, &clickX, &clickY, &dX, &dY);
+                //printf("Moved!\n");
+                sscanf(data, "%d %f %f %f %f", &clickDeviceId, &clickX, &clickY, &dX, &dY);
                 x = (int) (clickX * WIDTH);
                 y = (int) HEIGHT - (clickY * HEIGHT);
                 
@@ -176,8 +190,23 @@ sscanf(data, "%d %f %f %f %f", &clickDeviceId, &clickX, &clickY, &dX, &dY);
                 break;
 
             case EVT_PAN:
-                printf("Dragged!\n");
-                break;
+                //printf("Dragged!\n");
+                float panDX, panDY, panDZ;
+                sscanf(data, "%d %f %f %f %f %f", &clickDeviceId, &clickX, &clickY, &panDX, &panDY, &panDZ);
+                x = (int) (clickX * WIDTH);
+                y = (int) HEIGHT - (clickY * HEIGHT);
+                
+                webTiles[activeWebTile]->webView->InjectMouseMove(x, y);
+            case EVT_ZOOM:
+                printf("This is it:%s\n", data);
+                float zoomX, zoomY, zoomZ;
+                sscanf(data, "%d %f %f %f %f %f", &clickDeviceId, &clickX, &clickY, &zoomX, &zoomY, &zoomZ);
+
+                if( zoomX > 0 )
+                    webTiles[activeWebTile]->webView->InjectMouseWheel(25, 0);
+                else
+                    webTiles[activeWebTile]->webView->InjectMouseWheel(-25, 0);
+break;
         }
     }
 }
