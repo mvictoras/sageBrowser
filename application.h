@@ -55,6 +55,8 @@ class Application : public Awesomium::WebViewListener::View,
 
   void handleDragEnd(int x, int y);
 
+  void handleSageMessages();
+
   bool isReadyToQuit() const;
 
   virtual void OnChangeTitle(Awesomium::WebView* caller,

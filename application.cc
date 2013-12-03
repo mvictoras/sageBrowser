@@ -129,9 +129,57 @@ void Application::update() {
   if (isAnimating)
     driveAnimation();
 
+  handleSageMessages();
   draw();
 
   SDL_Delay(0);
+}
+
+void Application::handleSageMessages() {
+    sageMessage msg;
+    int clickDeviceId, clickButtonId, clickIsDown, clickEvent, x, y;
+    float clickX, clickY, dX, dY;
+    
+    if (sageInf->checkMsg(msg, false) > 0) {
+        printf("%d\n", msg.getCode());
+        char *data = (char *) msg.getData();
+        switch( msg.getCode() ) {
+            case APP_QUIT:
+            case NOTIFY_APP_SHUTDOWN:
+                printf("Quitting app!!!\n");
+                sageInf->shutdown();
+                shouldQuit = true;
+                break;
+
+            case EVT_CLICK:
+                printf("This is it:%s\n", data);
+                printf("Clicked!\n");
+                sscanf(data, "%d %f %f %d %d %d", &clickDeviceId, &clickX, &clickY, &clickButtonId, &clickIsDown, &clickEvent);
+                printf("EVT_CLICK %d x:%f y:%f\n", clickButtonId, clickX, clickY);
+                x = (int) (clickX * WIDTH);
+                y = (int) HEIGHT - (clickY * HEIGHT);
+
+                if( clickIsDown == 1 ) {
+                    webTiles[activeWebTile]->webView->InjectMouseDown(Awesomium::kMouseButton_Left);
+                } else {
+                    webTiles[activeWebTile]->webView->InjectMouseUp(Awesomium::kMouseButton_Left);
+                }
+
+                break;
+            case EVT_MOVE:
+                printf("Moved!\n");
+sscanf(data, "%d %f %f %f %f", &clickDeviceId, &clickX, &clickY, &dX, &dY);
+                x = (int) (clickX * WIDTH);
+                y = (int) HEIGHT - (clickY * HEIGHT);
+                
+                webTiles[activeWebTile]->webView->InjectMouseMove(x, y);
+                break;
+
+            case EVT_PAN:
+                printf("Dragged!\n");
+                break;
+        }
+    }
 }
 
 void Application::draw() {
