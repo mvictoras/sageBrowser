@@ -1,2 +1,0 @@
-g++ -o webflow *.cc ../common/sdl/gl_texture_surface.cc -I/home/victoras/projects/sage-dev/include -L/home/victoras/projects/sage-dev/lib -lawesomium-1-7 -lglut -lGL -lSDL -ludev -lGLU -lsail  -o webflow
-
